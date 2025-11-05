@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import crud, schemas, security
+from .. import ai_services, crud, schemas, security
 from ..database import get_db
 
 router = APIRouter(
@@ -50,3 +50,14 @@ def delete_existing_drop(drop_id: uuid.UUID, db: Session = Depends(get_db)):
     crud.delete_drop(db, db_drop=db_drop)
     db.commit()
     return db_drop
+
+
+@router.post("/generate-description", response_model=dict)
+def generate_description_with_ai(request_body: schemas.AIGenerationRequest):
+    """
+    Verilen drop adı ve anahtar kelimelerle AI kullanarak bir açıklama üretir.
+    """
+    description = ai_services.generate_drop_description(
+        name=request_body.name, keywords=request_body.keywords
+    )
+    return {"description": description}

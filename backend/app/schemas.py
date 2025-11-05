@@ -76,3 +76,9 @@ class Claim(BaseModel):
     claimed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Ai Schemas ---
+class AIGenerationRequest(BaseModel):
+    name: str
+    keywords: str | None = None
