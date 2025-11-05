@@ -24,3 +24,24 @@ class User(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class DropBase(BaseModel):
+    name: str
+    description: str | None = None
+    claim_window_start: datetime
+    claim_window_end: datetime
+    total_stock: int
+
+
+class DropCreate(DropBase):
+    pass
+
+
+class Drop(DropBase):
+    id: uuid.UUID
+    claimed_stock: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

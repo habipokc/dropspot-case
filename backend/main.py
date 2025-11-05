@@ -1,5 +1,6 @@
 from app import crud, models, schemas, security
 from app.database import engine, get_db
+from app.routers import drops
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from sqlalchemy.orm import Session
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.include_router(drops.router)
 
 
 @app.post("/auth/signup", response_model=schemas.User)

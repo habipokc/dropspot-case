@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from . import crud
+from . import crud, models
 from .database import get_db
 
 load_dotenv()
@@ -58,3 +58,16 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+def get_current_admin_user(current_user: models.User = Depends(get_current_user)):
+    """
+    Geçerli kullanıcının admin olup olmadığını kontrol eder.
+    Değilse 403 Forbidden hatası fırlatır.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user does not have enough privileges",
+        )
+    return current_user
