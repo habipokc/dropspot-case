@@ -1,3 +1,4 @@
+// components/ui/DropCard.tsx
 'use client';
 
 import Link from 'next/link';
