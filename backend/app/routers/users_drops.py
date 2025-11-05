@@ -1,3 +1,5 @@
+# app/routers/users_drops.py
+
 import uuid
 from datetime import datetime, timezone
 from typing import List
@@ -16,6 +18,14 @@ def get_all_active_drops(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
     return crud.get_drops(db, skip=skip, limit=limit)
+
+
+@router.get("/{drop_id}", response_model=schemas.Drop)
+def get_single_drop(drop_id: uuid.UUID, db: Session = Depends(get_db)):
+    db_drop = crud.get_drop(db, drop_id=drop_id)
+    if db_drop is None:
+        raise HTTPException(status_code=404, detail="Drop not found")
+    return db_drop
 
 
 @router.post("/{drop_id}/join", response_model=schemas.WaitlistEntry)
@@ -62,10 +72,11 @@ def claim_drop(
 ):
     """
     Geçerli kullanıcının belirtilen drop için hak talebinde bulunmasını sağlar.
-    Bu işlem, veri bütünlüğünü sağlamak için bir transaction ve locking kullanır.
+    Transaction + satır kilitleme (FOR UPDATE) kullanarak race condition önler.
     """
-    with db.begin_nested():  # Bu, otomatik bir transaction başlatır. Hata olursa rollback yapar.
-        # Satırı kilitleyerek race condition'ı önle (SELECT ... FOR UPDATE)
+
+    # Savepoint oluşturmak için nested transaction kullanıyoruz
+    with db.begin_nested():
         drop_to_claim = (
             db.query(models.Drop)
             .filter(models.Drop.id == drop_id)
@@ -76,35 +87,34 @@ def claim_drop(
         if not drop_to_claim:
             raise HTTPException(status_code=404, detail="Drop not found")
 
-        # Zaman kontrolü - datetime'ları timezone-aware yap
+        # --- Zaman kontrolü (timezone-aware) ---
         now = datetime.now(timezone.utc)
+        claim_start = (
+            drop_to_claim.claim_window_start.replace(tzinfo=timezone.utc)
+            if drop_to_claim.claim_window_start.tzinfo is None
+            else drop_to_claim.claim_window_start
+        )
+        claim_end = (
+            drop_to_claim.claim_window_end.replace(tzinfo=timezone.utc)
+            if drop_to_claim.claim_window_end.tzinfo is None
+            else drop_to_claim.claim_window_end
+        )
 
-        # claim_window_start'ı timezone-aware yap
-        claim_start = drop_to_claim.claim_window_start
-        if claim_start.tzinfo is None:
-            claim_start = claim_start.replace(tzinfo=timezone.utc)
-
-        # claim_window_end'i timezone-aware yap
-        claim_end = drop_to_claim.claim_window_end
-        if claim_end.tzinfo is None:
-            claim_end = claim_end.replace(tzinfo=timezone.utc)
-
-        # Şimdi güvenle karşılaştır
         if not (claim_start <= now <= claim_end):
             raise HTTPException(status_code=400, detail="Claim window is not open")
 
-        # Stok kontrolü
+        # --- Stok kontrolü ---
         if drop_to_claim.claimed_stock >= drop_to_claim.total_stock:
             raise HTTPException(status_code=400, detail="No stock left")
 
-        # TODO: Kazananları belirleme mantığı eklenecek. Şimdilik listede olmak yeterli.
+        # --- Kullanıcı bekleme listesinde mi? ---
         waitlist_entry = crud.get_waitlist_entry(
             db, user_id=current_user.id, drop_id=drop_id
         )
         if not waitlist_entry:
             raise HTTPException(status_code=400, detail="User is not on the waitlist")
 
-        # Kullanıcının zaten claim yapıp yapmadığını kontrol et
+        # --- Kullanıcı zaten claim yapmış mı? ---
         existing_claim = (
             db.query(models.Claim)
             .filter(
@@ -117,8 +127,14 @@ def claim_drop(
                 status_code=400, detail="User has already claimed this drop"
             )
 
+        # --- Claim oluştur ---
         new_claim = crud.create_claim(
             db=db, user_id=current_user.id, drop=drop_to_claim
         )
+
         db.flush()
-        return new_claim
+        db.refresh(new_claim)
+
+    db.commit()
+
+    return new_claim

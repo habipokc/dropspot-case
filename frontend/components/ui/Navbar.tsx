@@ -3,21 +3,17 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import api from '../../lib/api'; // 2. API instance'ımızı import ediyoruz
-import { useAuthStore } from '../../lib/store'; // 1. Zustand store'umuzu import ediyoruz
+import api from '../../lib/api';
+import { useAuthStore } from '../../lib/store';
 
 const Navbar = () => {
-    // 3. Store'dan anlık kullanıcı ve logout fonksiyonunu alıyoruz
     const { user, logout: storeLogout } = useAuthStore();
     const router = useRouter();
 
     const handleLogout = () => {
-        // 4. Temiz bir çıkış işlemi için:
-        // a. Zustand store'daki kullanıcı ve token'ı temizle
+
         storeLogout();
-        // b. Axios'un default header'ından Authorization bilgisini kaldır. Bu çok önemli!
         delete api.defaults.headers.common['Authorization'];
-        // c. Kullanıcıyı login sayfasına yönlendir
         router.push('/login');
     };
 
@@ -28,10 +24,17 @@ const Navbar = () => {
                     DropSpot
                 </Link>
                 <div className="flex items-center space-x-4">
-                    {/* 5. Kullanıcının olup olmadığını kontrol eden dinamik bölüm */}
                     {user ? (
-                        // Kullanıcı varsa bu bölüm gösterilir
                         <>
+                            {/* YENİ: Admin rol kontrolü */}
+                            {user.role === 'admin' && (
+                                <Link
+                                    href="/admin/drops"
+                                    className="px-3 py-2 rounded font-semibold text-yellow-300 hover:bg-gray-700"
+                                >
+                                    Drop Yönetimi
+                                </Link>
+                            )}
                             <span className="text-gray-300">Hoş geldin, {user.email}</span>
                             <button
                                 onClick={handleLogout}
@@ -41,7 +44,6 @@ const Navbar = () => {
                             </button>
                         </>
                     ) : (
-                        // Kullanıcı yoksa bu bölüm gösterilir
                         <>
                             <Link href="/login" className="px-3 py-2 rounded hover:bg-gray-700">
                                 Giriş Yap

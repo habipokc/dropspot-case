@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import AppInitializer from '../components/AppInitializer';
 import Navbar from '../components/ui/Navbar'; // Navbar'ı import et
 import './globals.css';
 
@@ -19,9 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar /> {/* Navbar'ı buraya ekle */}
+        <AppInitializer /> {/* 2. Body'nin en üstüne ekle */}
+        <Navbar />
         <main className="container mx-auto px-6 py-8">
-          {children} {/* Sayfa içeriği burada görünecek */}
+          {children}
         </main>
       </body>
     </html>
