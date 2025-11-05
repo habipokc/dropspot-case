@@ -234,4 +234,14 @@ yarn-error.log*
 
 # db
 
+*.db
+*.sqlite
+*.sqlite3
 /backend/dropspot.db
+/backend/test.db
+
+# Projeye özel geçici script'ler
+generate_seed.py
+
+# Pytest Cache
+.pytest_cache/

@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
+
+# --- User Schemas ---
 
 
 class UserBase(BaseModel):
@@ -17,13 +19,18 @@ class User(UserBase):
     role: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Token Schema ---
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+# --- Drop Schemas ---
 
 
 class DropBase(BaseModel):
@@ -43,8 +50,10 @@ class Drop(DropBase):
     claimed_stock: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Waitlist Schemas ---
 
 
 class WaitlistEntry(BaseModel):
@@ -53,8 +62,10 @@ class WaitlistEntry(BaseModel):
     drop_id: uuid.UUID
     joined_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Claim Schemas ---
 
 
 class Claim(BaseModel):
@@ -64,5 +75,10 @@ class Claim(BaseModel):
     claim_code: str
     claimed_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Ai Schemas ---
+class AIGenerationRequest(BaseModel):
+    name: str
+    keywords: str | None = None

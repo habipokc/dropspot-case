@@ -8,19 +8,14 @@ from sqlalchemy.orm import Session
 from .. import crud, models, schemas, security
 from ..database import get_db
 
-router = APIRouter(
-    prefix="/drops",
-    tags=["Drops"],
-)
+router = APIRouter(prefix="/drops", tags=["Drops"])
 
 
 @router.get("/", response_model=List[schemas.Drop])
 def get_all_active_drops(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
-    """Tüm aktif drop'ları listeler."""
-    drops = crud.get_drops(db, skip=skip, limit=limit)
-    return drops
+    return crud.get_drops(db, skip=skip, limit=limit)
 
 
 @router.post("/{drop_id}/join", response_model=schemas.WaitlistEntry)
@@ -29,15 +24,16 @@ def join_drop_waitlist(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(security.get_current_user),
 ):
-    """Geçerli kullanıcıyı belirtilen drop'un bekleme listesine ekler."""
     db_drop = crud.get_drop(db, drop_id=drop_id)
     if not db_drop:
         raise HTTPException(status_code=404, detail="Drop not found")
 
-    entry = crud.join_waitlist(db=db, user_id=current_user.id, drop_id=drop_id)
-    if entry is None:
+    if crud.get_waitlist_entry(db, user_id=current_user.id, drop_id=drop_id):
         raise HTTPException(status_code=400, detail="User already in waitlist")
 
+    entry = crud.join_waitlist(db=db, user=current_user, drop_id=drop_id)
+    db.commit()
+    db.refresh(entry)
     return entry
 
 
@@ -47,13 +43,14 @@ def leave_drop_waitlist(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(security.get_current_user),
 ):
-    """Geçerli kullanıcıyı belirtilen drop'un bekleme listesinden çıkarır."""
-    entry = crud.leave_waitlist(db=db, user_id=current_user.id, drop_id=drop_id)
+    entry = crud.get_waitlist_entry(db, user_id=current_user.id, drop_id=drop_id)
     if entry is None:
         raise HTTPException(
             status_code=404, detail="User not in waitlist for this drop"
         )
 
+    crud.leave_waitlist(db=db, waitlist_entry=entry)
+    db.commit()
     return None
 
 
