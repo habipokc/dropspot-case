@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import ai_services, crud, schemas, security
+from .. import ai_services, crud, models, schemas, security
 from ..database import get_db
 
 router = APIRouter(
@@ -61,3 +61,22 @@ def generate_description_with_ai(request_body: schemas.AIGenerationRequest):
         name=request_body.name, keywords=request_body.keywords
     )
     return {"description": description}
+
+
+@router.put("/{drop_id}", response_model=schemas.Drop)
+def update_existing_drop(
+    drop_id: uuid.UUID,
+    drop_update: schemas.DropCreate,  # Yeni veriyi bu şema ile alacağız
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(security.get_current_admin_user),
+):
+    db_drop = crud.get_drop(db, drop_id=drop_id)
+    if db_drop is None:
+        raise HTTPException(status_code=404, detail="Drop not found")
+
+    updated_drop = crud.update_drop(db=db, db_drop=db_drop, drop_update=drop_update)
+
+    db.commit()
+    db.refresh(updated_drop)
+
+    return updated_drop

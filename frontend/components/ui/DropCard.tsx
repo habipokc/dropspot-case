@@ -1,7 +1,7 @@
-// components/ui/DropCard.tsx
 'use client';
 
 import Link from 'next/link';
+import { useAuthStore } from '../../lib/store';
 
 interface Drop {
     id: string;
@@ -18,6 +18,8 @@ interface DropCardProps {
 }
 
 const DropCard: React.FC<DropCardProps> = ({ drop }) => {
+    const { user } = useAuthStore();
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('tr-TR', {
             year: 'numeric',
@@ -35,7 +37,6 @@ const DropCard: React.FC<DropCardProps> = ({ drop }) => {
             <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">{drop.name}</h3>
                 <p className="text-gray-600 mb-4">{drop.description}</p>
-
                 <div className="flex justify-between items-center mb-4 text-sm">
                     <span className="font-semibold text-indigo-600">
                         Kalan Stok: {remainingStock} / {drop.total_stock}
@@ -47,7 +48,6 @@ const DropCard: React.FC<DropCardProps> = ({ drop }) => {
                         {remainingStock > 0 ? 'Stokta' : 'Tükendi'}
                     </div>
                 </div>
-
                 <div className="text-xs text-gray-500 space-y-1">
                     <p>
                         <strong>Başlangıç:</strong> {formatDate(drop.claim_window_start)}
@@ -56,14 +56,21 @@ const DropCard: React.FC<DropCardProps> = ({ drop }) => {
                         <strong>Bitiş:</strong> {formatDate(drop.claim_window_end)}
                     </p>
                 </div>
-
                 <div className="mt-6">
-                    {/* Güncellenen bölüm */}
-                    <Link href={`/drops/${drop.id}`} passHref>
-                        <button className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Detayları Gör
-                        </button>
-                    </Link>
+                    {/* --- KRİTİK DEĞİŞİKLİK BURADA --- */}
+                    {user?.role === 'admin' ? (
+                        <Link href={`/admin/drops/edit/${drop.id}`} passHref>
+                            <button className="w-full px-4 py-2 font-semibold text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
+                                Drop'u Yönet
+                            </button>
+                        </Link>
+                    ) : (
+                        <Link href={`/drops/${drop.id}`} passHref>
+                            <button className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                                Detayları Gör
+                            </button>
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

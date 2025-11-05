@@ -7,14 +7,23 @@ import { useAuthStore } from '../lib/store';
 
 export default function AppInitializer() {
     useEffect(() => {
-        const token = useAuthStore.getState().token;
 
-        if (token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const unsubscribe = useAuthStore.persist.onFinishHydration((state) => {
+            if (state.token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+            }
+        });
+
+
+        const initialToken = useAuthStore.getState().token;
+        if (initialToken) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${initialToken}`;
         }
 
-
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     return null;
-}   
+}
