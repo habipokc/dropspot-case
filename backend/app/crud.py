@@ -1,8 +1,15 @@
+import secrets
 import uuid
+from datetime import datetime, timezone
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from . import models, schemas, security
+from . import config, models, schemas, security
+
+
+def get_user(db: Session, user_id: uuid.UUID):
+    return db.query(models.User).filter(models.User.id == user_id).first()
 
 
 def get_user_by_email(db: Session, email: str):
@@ -61,3 +68,79 @@ def delete_drop(db: Session, drop_id: uuid.UUID):
         db.delete(db_drop)
         db.commit()
     return db_drop
+
+
+def join_waitlist(db: Session, user_id: uuid.UUID, drop_id: uuid.UUID):
+    """Bir kullanıcıyı bir drop'un bekleme listesine ekler ve priority_score hesaplar."""
+
+    user = get_user(db, user_id)
+    if not user:
+        return None
+
+    # Veritabanından gelen datetime'ı timezone-aware yap
+    user_created_at = user.created_at
+    if user_created_at.tzinfo is None:
+        # Eğer timezone bilgisi yoksa, UTC olarak kabul et
+        user_created_at = user_created_at.replace(tzinfo=timezone.utc)
+
+    account_age_days = (datetime.now(timezone.utc) - user_created_at).days
+
+    joined_at_second = datetime.now(timezone.utc).second
+
+    priority_score = (account_age_days % config.B) * 10 - (joined_at_second % config.A)
+
+    db_waitlist_entry = models.WaitlistEntry(
+        user_id=user_id, drop_id=drop_id, priority_score=priority_score
+    )
+    db.add(db_waitlist_entry)
+    try:
+        db.commit()
+        db.refresh(db_waitlist_entry)
+    except IntegrityError:
+        db.rollback()
+        return None
+    return db_waitlist_entry
+
+
+def leave_waitlist(db: Session, user_id: uuid.UUID, drop_id: uuid.UUID):
+    """Bir kullanıcıyı bir drop'un bekleme listesinden çıkarır."""
+    db_waitlist_entry = (
+        db.query(models.WaitlistEntry)
+        .filter(
+            models.WaitlistEntry.user_id == user_id,
+            models.WaitlistEntry.drop_id == drop_id,
+        )
+        .first()
+    )
+
+    if db_waitlist_entry:
+        db.delete(db_waitlist_entry)
+        db.commit()
+    return db_waitlist_entry
+
+
+def get_waitlist_entry(db: Session, user_id: uuid.UUID, drop_id: uuid.UUID):
+    """Kullanıcının bekleme listesinde olup olmadığını kontrol eder."""
+    return (
+        db.query(models.WaitlistEntry)
+        .filter(
+            models.WaitlistEntry.user_id == user_id,
+            models.WaitlistEntry.drop_id == drop_id,
+        )
+        .first()
+    )
+
+
+def create_claim(db: Session, user_id: uuid.UUID, drop: models.Drop):
+    """
+    Bir kullanıcı için hak talebi oluşturur. Bu işlem bir transaction içinde
+    çağrılmalıdır.
+    """
+    claim_code = f"CLAIM-{drop.id.hex[:4]}-{secrets.token_hex(4).upper()}"
+
+    db_claim = models.Claim(user_id=user_id, drop_id=drop.id, claim_code=claim_code)
+    db.add(db_claim)
+
+    drop.claimed_stock += 1
+
+    return db_claim

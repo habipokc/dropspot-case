@@ -45,3 +45,24 @@ class Drop(DropBase):
 
     class Config:
         from_attributes = True
+
+
+class WaitlistEntry(BaseModel):
+    id: int
+    user_id: uuid.UUID
+    drop_id: uuid.UUID
+    joined_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class Claim(BaseModel):
+    id: int
+    user_id: uuid.UUID
+    drop_id: uuid.UUID
+    claim_code: str
+    claimed_at: datetime
+
+    class Config:
+        from_attributes = True
