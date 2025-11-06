@@ -127,7 +127,9 @@ Adminler mevcut dropları bu sayfada görüntüleyebilir. Yeni drop oluşturmaya
 ![Drop Güncelleme Formu](screenshots/03-admin-edit-drop.png)
 
 ### Drop Oluşturma Sayfası (Bonus AI özelliği ile)
+
 Adminler drop oluşturmak için bu sayfayı kullanır. AI ile üret butonuna basarak drop için açıklama metni üretebilir. 
+
 ![Drop Oluşturma Formu](screenshots/04-admin-create-drop.png)
 ---
 
