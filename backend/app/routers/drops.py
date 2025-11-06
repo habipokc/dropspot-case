@@ -2,6 +2,7 @@ import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .. import ai_services, crud, models, schemas, security
@@ -12,6 +13,27 @@ router = APIRouter(
     tags=["Admin Drops"],
     dependencies=[Depends(security.get_current_admin_user)],
 )
+
+
+class DropDeletionInfo(BaseModel):
+    waitlist_count: int
+    claim_count: int
+
+
+@router.get("/{drop_id}/deletion-info", response_model=DropDeletionInfo)
+def get_drop_deletion_info(
+    drop_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(security.get_current_admin_user),
+):
+    waitlist_count = (
+        db.query(models.WaitlistEntry)
+        .filter(models.WaitlistEntry.drop_id == drop_id)
+        .count()
+    )
+    claim_count = db.query(models.Claim).filter(models.Claim.drop_id == drop_id).count()
+
+    return DropDeletionInfo(waitlist_count=waitlist_count, claim_count=claim_count)
 
 
 @router.post("/", response_model=schemas.Drop)

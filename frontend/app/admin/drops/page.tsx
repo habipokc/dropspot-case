@@ -34,15 +34,29 @@ export default function AdminDropsPage() {
         fetchDrops();
     }, []);
 
-    const handleDelete = async (dropId: string) => {
-        if (confirm('Bu dropu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-            try {
+    const handleDelete = async (dropId: string, dropName: string) => {
+        try {
+            // 1. Silmeden önce bağlı kullanıcı sayısını al
+            const { data } = await api.get(`/admin/drops/${dropId}/deletion-info`);
+            const { waitlist_count, claim_count } = data;
+
+            let confirmationMessage = `'${dropName}' adlı drop'u silmek istediğinizden emin misiniz?`;
+
+            // 2. Gelen bilgiye göre dinamik bir onay mesajı oluştur
+            if (waitlist_count > 0 || claim_count > 0) {
+                confirmationMessage += `\n\nUYARI: Bu drop'a bağlı olan ${waitlist_count} bekleme listesi kaydı ve ${claim_count} hak talebi kaydı da kalıcı olarak silinecektir.`;
+            }
+
+            confirmationMessage += "\n\nBu işlem geri alınamaz.";
+
+            // 3. Dinamik mesajla kullanıcıdan onay al
+            if (confirm(confirmationMessage)) {
                 await api.delete(`/admin/drops/${dropId}`);
                 // Başarılı silme sonrası listeyi yenile
                 fetchDrops();
-            } catch (err) {
-                alert('Drop silinirken bir hata oluştu.');
             }
+        } catch (err) {
+            alert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.');
         }
     };
 
@@ -83,7 +97,7 @@ export default function AdminDropsPage() {
                                     <Link href={`/admin/drops/edit/${drop.id}`} className="text-yellow-600 hover:text-yellow-900">
                                         Düzenle
                                     </Link>
-                                    <button onClick={() => handleDelete(drop.id)} className="text-red-600 hover:text-red-900">
+                                    <button onClick={() => handleDelete(drop.id, drop.name)} className="text-red-600 hover:text-red-900">
                                         Sil
                                     </button>
                                 </td>

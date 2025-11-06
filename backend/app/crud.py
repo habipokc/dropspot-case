@@ -47,7 +47,19 @@ def update_drop(db: Session, db_drop: models.Drop, drop_update: schemas.DropCrea
 
 
 def delete_drop(db: Session, db_drop: models.Drop):
+    """
+    Bir drop'u ve ona bağlı tüm alt kayıtları (waitlist, claims) siler.
+    """
+    db.query(models.WaitlistEntry).filter(
+        models.WaitlistEntry.drop_id == db_drop.id
+    ).delete(synchronize_session=False)
+
+    db.query(models.Claim).filter(models.Claim.drop_id == db_drop.id).delete(
+        synchronize_session=False
+    )
+
     db.delete(db_drop)
+
     return db_drop
 
 
