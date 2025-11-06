@@ -6,7 +6,7 @@
 
 ## 1. Proje Özeti ve Mimari Açıklama
 
-DropSpot, sınırlı stoklu ürünlerin (drop) yayınlandığı, kullanıcıların bu droplara katılarak bekleme listesine girdiği ve hak talebinde bulunduğu bir Full Stack web uygulamasıdır. Proje, Alpaco'nun ürün geliştirme kültürünü yansıtan, modern teknolojiler ve en iyi endüstri pratikleri kullanılarak uçtan uca geliştirilmiştir.
+DropSpot, sınırlı stoklu ürünlerin (drop) yayınlandığı, kullanıcıların bu droplara katılarak bekleme listesine girdiği ve hak talebinde bulunduğu bir Full Stack web uygulamasıdır. Proje ürün geliştirme kültürünü yansıtan, modern teknolojiler ve en iyi endüstri pratikleri kullanılarak uçtan uca geliştirilmiştir.
 
 **Temel Mimarisi:**
 Proje, `backend` ve `frontend` servislerini içeren bir **monorepo** yapısındadır.
