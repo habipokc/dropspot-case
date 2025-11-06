@@ -119,13 +119,16 @@ Tüm kullanıcılar, aktif olan dropları bu kart yapısıyla ana sayfada görü
 ![Kullanıcı Drop Listesi](screenshots/01-user-drop-list.png)
 
 ### Admin Paneli (Drop Yönetim Tablosu)
-Admin rolüne sahip kullanıcılar, tüm dropları bu merkezi panelden yönetebilir. Buradan düzenleme ve silme işlemleri tetiklenebilir.
+Admin rolüne sahip kullanıcılar, tüm dropları bu merkezi panelden yönetebilir. Buradan düzenleme işlemi tetiklenebilir.
 ![Admin Paneli](screenshots/02-admin-panel.png)
 
-### Drop Güncelleme Sayfası (Bonus AI Özelliği ile)
-Adminler, mevcut bir drop'un bilgilerini bu form üzerinden güncelleyebilir. "AI ile Üret" butonu, drop adı ve anahtar kelimelerden yola çıkarak Gemini API aracılığıyla otomatik olarak bir pazarlama açıklaması oluşturur.
+### Drop Yönetim Sayfası 
+Adminler mevcut dropları bu sayfada görüntüleyebilir. Yeni drop oluşturmaya geçebilir, var olan dropları düzenleyebilir ve silebilir.
 ![Drop Güncelleme Formu](screenshots/03-admin-edit-drop.png)
 
+### Drop Oluşturma Sayfası (Bonus AI özelliği ile)
+Adminler drop oluşturmak için bu sayfayı kullanır. AI ile üret butonuna basarak drop için açıklama metni üretebilir. 
+![Drop Oluşturma Formu](screenshots/04-admin-create-drop.png)
 ---
 
 ## 7. Teknik Tercihler ve Kişisel Katkılar

@@ -26,6 +26,19 @@ export default function DropInteraction({ dropId }: DropInteractionProps) {
         setIsLoading(false);
     };
 
+
+    const handleLeave = async () => {
+        setIsLoading(true);
+        setFeedback({ message: '', type: '' });
+        try {
+            await api.post(`/drops/${dropId}/leave`);
+            setFeedback({ message: 'Bekleme listesinden başarıyla ayrıldınız.', type: 'success' });
+        } catch (err: any) {
+            setFeedback({ message: err.response?.data?.detail || 'Bir hata oluştu.', type: 'error' });
+        }
+        setIsLoading(false);
+    };
+
     const handleClaim = async () => {
         setIsLoading(true);
         setFeedback({ message: '', type: '' });
@@ -55,6 +68,16 @@ export default function DropInteraction({ dropId }: DropInteractionProps) {
                 >
                     {isLoading ? 'İşleniyor...' : 'Bekleme Listesine Katıl'}
                 </button>
+
+
+                <button
+                    onClick={handleLeave}
+                    disabled={isLoading}
+                    className="px-8 py-3 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                >
+                    {isLoading ? 'İşleniyor...' : 'Bekleme Listesinden Ayrıl'}
+                </button>
+
                 <button
                     onClick={handleClaim}
                     disabled={isLoading}
