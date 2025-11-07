@@ -110,6 +110,8 @@ Veri bütünlüğü ve tutarlılığı, projenin en kritik önceliğidir.
     ```
 Uygulama artık `http://localhost:3000` adresinde çalışıyor olacaktır.
 
+Not: Admin yapmak istediğiniz kullanıcıyı postgresql veritabanına bağlanıp role hücresini admin olarak güncellemeniz gerekemektedir.
+
 ---
 
 ## 6. Ekran Görüntüleri
